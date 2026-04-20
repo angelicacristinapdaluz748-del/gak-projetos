@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GAK Engenharia — Controle de Projetos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f1;color:#1a1a18;min-height:100vh}
+.topnav{background:#fff;border-bottom:0.5px solid #e0dfd8;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:10}
+.topnav-brand{display:flex;align-items:center;gap:10px}
+.topnav-logo{width:32px;height:32px;background:#1a1a18;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.topnav-logo span{color:#fff;font-weight:700;font-size:13px;letter-spacing:0.5px}
+.topnav-title{font-size:15px;font-weight:500;color:#1a1a18}
+.topnav-right{display:flex;gap:8px;align-items:center}
+.page{max-width:1100px;margin:0 auto;padding:2rem 1.5rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px}
+.topbar h1{font-size:20px;font-weight:500;color:#1a1a18}
+.topbar-right{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:1.5rem}
+.metric{background:#fff;border-radius:10px;border:0.5px solid #e0dfd8;padding:1rem 1.25rem}
+.metric-label{font-size:12px;color:#888780;margin-bottom:6px}
+.metric-value{font-size:24px;font-weight:500;color:#1a1a18}
+.metric-value.danger{color:#a32d2d}
+.metric-value.warn{color:#854f0b}
+.metric-value.info{color:#185fa5}
+.metric-value.success{color:#3b6d11}
+.filters{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:13px;color:#888780}
+.pill{font-size:12px;padding:5px 14px;border-radius:20px;border:0.5px solid #d3d1c7;background:transparent;cursor:pointer;color:#5f5e5a;transition:all 0.15s}
+.pill:hover{background:#f1efe8}
+.pill.active{background:#e6f1fb;color:#185fa5;border-color:#b5d4f4}
+.table-wrap{background:#fff;border:0.5px solid #e0dfd8;border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{font-size:12px;font-weight:500;color:#888780;padding:10px 14px;text-align:left;border-bottom:0.5px solid #e0dfd8;background:#f9f8f5;white-space:nowrap}
+td{font-size:13px;color:#1a1a18;padding:12px 14px;border-bottom:0.5px solid #f1efe8;vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.clickable{cursor:pointer;transition:background 0.1s}
+tr.clickable:hover td{background:#f9f8f5}
+.badge{display:inline-block;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500;white-space:nowrap}
+.badge.vencido{background:#fcebeb;color:#a32d2d}
+.badge.atencao{background:#faeeda;color:#854f0b}
+.badge.ok,.badge.andamento{background:#e6f1fb;color:#185fa5}
+.badge.pausado{background:#f1efe8;color:#5f5e5a}
+.badge.concluido{background:#eaf3de;color:#3b6d11}
+.dias-badge{display:inline-block;font-size:12px;font-weight:500;padding:3px 9px;border-radius:20px}
+.dias-badge.danger{background:#fcebeb;color:#a32d2d}
+.dias-badge.warn{background:#faeeda;color:#854f0b}
+.dias-badge.ok{background:#eaf3de;color:#3b6d11}
+.dias-badge.gray{background:#f1efe8;color:#5f5e5a}
+.col-num{width:75px}
+.col-cliente{width:18%}
+.col-objeto{width:auto}
+.col-prazo{width:100px}
+.col-dias{width:82px}
+.col-valor{width:110px}
+.col-status{width:115px}
+.col-acao{width:60px}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal{background:#fff;border-radius:14px;border:0.5px solid #e0dfd8;width:100%;max-width:600px;max-height:92vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,0.12)}
+.modal-header{padding:1.25rem 1.5rem;border-bottom:0.5px solid #e0dfd8;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;background:#fff;z-index:2}
+.modal-header h2{font-size:16px;font-weight:500;color:#1a1a18}
+.modal-body{padding:1.25rem 1.5rem}
+.modal-footer{padding:1rem 1.5rem;border-top:0.5px solid #e0dfd8;display:flex;gap:8px;justify-content:flex-end;align-items:center;position:sticky;bottom:0;background:#fff}
+.close-btn{background:transparent;border:none;cursor:pointer;font-size:22px;color:#888780;line-height:1;padding:0 4px}
+.close-btn:hover{color:#1a1a18}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:12px;color:#888780;font-weight:500}
+.field input,.field select,.field textarea{font-size:13px;border-radius:8px;border:0.5px solid #d3d1c7;padding:8px 11px;background:#fff;color:#1a1a18;width:100%;outline:none;transition:border-color 0.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#185fa5}
+.field textarea{min-height:72px;resize:vertical;font-family:inherit}
+.field-full{grid-column:1/-1}
+.marcos-section{margin-bottom:14px}
+.marcos-section>label{font-size:12px;color:#888780;font-weight:500;display:block;margin-bottom:8px}
+.marco-item{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.marco-item input[type=text]{flex:1;font-size:13px;border-radius:8px;border:0.5px solid #d3d1c7;padding:7px 10px;background:#fff;color:#1a1a18;outline:none}
+.marco-item input[type=text]:focus{border-color:#185fa5}
+.marco-item input[type=date]{width:145px;font-size:13px;border-radius:8px;border:0.5px solid #d3d1c7;padding:7px 10px;background:#fff;color:#1a1a18;outline:none}
+.marco-item input[type=date]:focus{border-color:#185fa5}
+.add-marco{font-size:12px;color:#185fa5;background:transparent;border:none;cursor:pointer;padding:0;font-family:inherit}
+.add-marco:hover{text-decoration:underline}
+.rm-btn{background:transparent;border:none;cursor:pointer;color:#888780;font-size:20px;line-height:1;padding:0 2px;flex-shrink:0}
+.rm-btn:hover{color:#a32d2d}
+.btn{font-size:13px;padding:7px 16px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;cursor:pointer;font-family:inherit;transition:background 0.15s}
+.btn:hover{background:#f1efe8}
+.btn-primary{background:#1a1a18;color:#fff;border-color:#1a1a18}
+.btn-primary:hover{background:#333}
+.btn-danger{color:#a32d2d;border-color:#f0a0a0}
+.btn-danger:hover{background:#fcebeb}
+.spacer{flex:1}
+.empty{text-align:center;padding:3rem;color:#888780;font-size:13px}
+.search-input{font-size:13px;padding:7px 11px;border-radius:8px;border:0.5px solid #d3d1c7;background:#fff;color:#1a1a18;width:180px;outline:none}
+.search-input:focus{border-color:#185fa5}
+.detail-label{font-size:12px;color:#888780;margin-bottom:4px;font-weight:500}
+.detail-value{font-size:13px;color:#1a1a18;margin-bottom:14px}
+.marco-check-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;padding:10px;border-radius:8px;background:#f9f8f5;border:0.5px solid #e0dfd8}
+.marco-check-item input[type=checkbox]{width:16px;height:16px;cursor:pointer;margin-top:1px;flex-shrink:0;accent-color:#185fa5}
+.toast{position:fixed;bottom:2rem;right:2rem;background:#1a1a18;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none}
+.toast.show{opacity:1}
+@media(max-width:700px){
+  .col-objeto,.col-valor{display:none}
+  .page{padding:1rem}
+  .topnav{padding:0 1rem}
+  .field-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand">
+    <div class="topnav-logo"><span>GAK</span></div>
+    <span class="topnav-title">Controle de projetos</span>
+  </div>
+  <div class="topnav-right">
+    <button class="btn btn-primary" onclick="abrirNovo()">+ Novo projeto</button>
+  </div>
+</nav>
+
+<div class="page">
+  <div class="metrics" id="metrics"></div>
+
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:1rem">
+    <div class="filters" style="margin-bottom:0">
+      <span class="filter-label">Filtrar:</span>
+      <button class="pill active" onclick="filtrar('todos',this)">Todos</button>
+      <button class="pill" onclick="filtrar('vencido',this)">Vencidos</button>
+      <button class="pill" onclick="filtrar('atencao',this)">Atenção</button>
+      <button class="pill" onclick="filtrar('ok',this)">No prazo</button>
+      <button class="pill" onclick="filtrar('pausado',this)">Pausado</button>
+      <button class="pill" onclick="filtrar('concluido',this)">Concluídos</button>
+    </div>
+    <input class="search-input" id="searchInput" type="text" placeholder="Buscar...">
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-num">#</th>
+          <th class="col-cliente">Cliente</th>
+          <th class="col-objeto">Objeto</th>
+          <th class="col-prazo">Próx. entrega</th>
+          <th class="col-dias">Dias</th>
+          <th class="col-valor">Valor</th>
+          <th class="col-status">Status</th>
+          <th class="col-acao"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="modal" style="display:none"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var STORAGE_KEY = 'gak_projetos_v1';
+var hoje = new Date(); hoje.setHours(0,0,0,0);
+var filtroAtivo = 'todos';
+var searchTerm = '';
+var nextId = 8;
+
+var dadosIniciais = [
+  {
+    id:1, num:'#133', cliente:'José Roberto Canteri ME', contato:'Roberto',
+    objeto:'Assistência técnica judicial — Retroescavadeira Forza (Processo 5006759-71.2024.8.24.0045)',
+    dataInicio:'2025-07-25',
+    marcos:[
+      {nome:'Entrega laudo técnico (1ª parte)',data:'',concluido:false},
+      {nome:'Conclusão do processo judicial',data:'',concluido:false}
+    ],
+    valor:4000.00, status:'andamento',
+    obs:'Acompanhamento total até conclusão do feito. Pagamento: 50% na 1ª entrega + 50% 30 dias após laudo. Prazo segue cronograma judicial.'
+  },
+  {
+    id:2, num:'#156', cliente:'OESL', contato:'Vitor Dovaroski',
+    objeto:'Inspeção e regularização NR-13 — Vasos de pressão, autoclaves e linhas de processo',
+    dataInicio:'2025-11-07',
+    marcos:[
+      {nome:'Entrega laudos e documentação NR-13',data:'',concluido:false}
+    ],
+    valor:23100.00, status:'andamento',
+    obs:'Valor sem Teste Hidrostático: R$23.100. Com TH (3 autoclaves): R$26.700. Validade: até próxima inspeção periódica.'
+  },
+  {
+    id:3, num:'#166.1', cliente:'LDC', contato:'Felippe Neves',
+    objeto:'Projeto de prancha para tombador elevatório — detalhamento para fabricação e análise estrutural FEA',
+    dataInicio:'2025-12-19',
+    marcos:[
+      {nome:'Entrega projeto + análise estrutural',data:'',concluido:false}
+    ],
+    valor:6122.68, status:'andamento',
+    obs:'Inclui deslocamento Ponta Grossa–Paraguaçu Paulista (764 km), hospedagem e levantamento em campo (1 dia). Pagamento a combinar.'
+  },
+  {
+    id:4, num:'#167.1', cliente:'Cooperativa Frísia', contato:'Felipe',
+    objeto:'Levantamento e cadastro de ativos — Fábrica de Rações Carambeí (ISO 14224/55000)',
+    dataInicio:'2025-12-19',
+    marcos:[
+      {nome:'Conclusão levantamento campo + relatório',data:'2026-02-06',concluido:false}
+    ],
+    valor:23500.00, status:'andamento',
+    obs:'Estimativa: 30 dias de campo + tratamento de dados. Time de 2 pessoas. Prazo ~6 semanas sujeito a janelas de acesso. Desconto aplicado: R$2.523,28.'
+  },
+  {
+    id:5, num:'#184', cliente:'LDC', contato:'Felippe Neves',
+    objeto:'Análise estrutural por elementos finitos (FEA) — prancha tombador elevatório',
+    dataInicio:'2026-03-31',
+    marcos:[
+      {nome:'Entrega memorial de cálculo + relatório FEA',data:'2026-05-15',concluido:false}
+    ],
+    valor:15707.88, status:'andamento',
+    obs:'Prazo: 45 dias após aprovação do orçamento. Inclui: memorial de cálculo, simulação FEA, projeto CAD e ART.'
+  },
+  {
+    id:6, num:'#194', cliente:'Castrolanda', contato:'Karlony — Engenharia',
+    objeto:'Projeto de ar comprimido — Unidade Tocantins',
+    dataInicio:'2026-02-20',
+    marcos:[
+      {nome:'Entrega (básica ou detalhada)',data:'2026-04-01',concluido:false}
+    ],
+    valor:16000.00, status:'andamento',
+    obs:'Alternativa A: R$7.000 (básico) / Alternativa B: R$16.000 (detalhado). Prazo: 40 dias da OC.'
+  },
+  {
+    id:7, num:'#195', cliente:'MedVitae', contato:'Leandro Marinho',
+    objeto:'Projeto HVAC — Clínica de Medicina do Trabalho',
+    dataInicio:'2026-02-26',
+    marcos:[
+      {nome:'Entrega básica (Proposta 1)',data:'2026-03-28',concluido:false},
+      {nome:'Entrega detalhada (Proposta 2)',data:'2026-04-17',concluido:false}
+    ],
+    valor:11280.95, status:'andamento',
+    obs:'Cliente optará entre Proposta 1 (R$5.840,48) ou Proposta 2 (R$11.280,95). Ref: MedVitae Ar-cond R03.'
+  }
+];
+
+function carregar() {
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      var d = JSON.parse(raw);
+      nextId = d.nextId || 3;
+      return d.projetos || dadosIniciais;
+    }
+  } catch(e){}
+  nextId = 8;
+  return dadosIniciais;
+}
+
+function salvarStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({projetos:projetos, nextId:nextId})); } catch(e){}
+}
+
+var projetos = carregar();
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){t.classList.remove('show');}, 2000);
+}
+
+function diasParaEntrega(p) {
+  if(p.status==='concluido'||p.status==='pausado') return null;
+  var ativas = p.marcos.filter(function(m){return !m.concluido && m.data}).map(function(m){return new Date(m.data+'T00:00:00')});
+  if(!ativas.length) return null;
+  var proxima = ativas.sort(function(a,b){return a-b})[0];
+  return Math.round((proxima-hoje)/(1000*60*60*24));
+}
+
+function urgencia(dias) {
+  if(dias===null) return 'gray';
+  if(dias<0) return 'danger';
+  if(dias<=7) return 'warn';
+  return 'ok';
+}
+
+function urgenciaTabela(p) {
+  if(p.status==='concluido') return 'concluido';
+  if(p.status==='pausado') return 'pausado';
+  var d = diasParaEntrega(p);
+  if(d===null) return 'ok';
+  if(d<0) return 'vencido';
+  if(d<=7) return 'atencao';
+  return 'ok';
+}
+
+function fmtData(str) {
+  if(!str) return '—';
+  var p = str.split('-');
+  return p[2]+'/'+p[1]+'/'+p[0];
+}
+
+function fmtValor(v) {
+  return 'R$\u00a0'+Number(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
+function proxEntrega(p) {
+  var ativas = p.marcos.filter(function(m){return !m.concluido && m.data}).map(function(m){return m.data});
+  if(!ativas.length) {
+    var todas = p.marcos.filter(function(m){return m.data}).map(function(m){return m.data});
+    return todas.length ? fmtData(todas.sort().pop()) : '—';
+  }
+  ativas.sort();
+  return fmtData(ativas[0]);
+}
+
+function renderMetrics() {
+  var ativos = projetos.filter(function(p){return p.status!=='concluido'});
+  var vencidos = ativos.filter(function(p){return urgenciaTabela(p)==='vencido'}).length;
+  var atencao = ativos.filter(function(p){return urgenciaTabela(p)==='atencao'}).length;
+  var totalAberto = projetos.filter(function(p){return p.status!=='concluido'}).reduce(function(s,p){return s+Number(p.valor)},0);
+  var totalGeral = projetos.reduce(function(s,p){return s+Number(p.valor)},0);
+  document.getElementById('metrics').innerHTML =
+    '<div class="metric"><div class="metric-label">Projetos ativos</div><div class="metric-value info">'+ativos.length+'</div></div>'+
+    '<div class="metric"><div class="metric-label">Vencidos</div><div class="metric-value danger">'+vencidos+'</div></div>'+
+    '<div class="metric"><div class="metric-label">Atenção (≤ 7 dias)</div><div class="metric-value warn">'+atencao+'</div></div>'+
+    '<div class="metric"><div class="metric-label">Em aberto</div><div class="metric-value">'+fmtValor(totalAberto)+'</div></div>'+
+    '<div class="metric"><div class="metric-label">Total (todos)</div><div class="metric-value success">'+fmtValor(totalGeral)+'</div></div>';
+}
+
+function renderTabela() {
+  var ord = {vencido:0,atencao:1,andamento:2,ok:2,pausado:3,concluido:4};
+  var lista = projetos.slice().sort(function(a,b){
+    var ua=urgenciaTabela(a), ub=urgenciaTabela(b);
+    if(ord[ua]!==ord[ub]) return ord[ua]-ord[ub];
+    var da=diasParaEntrega(a), db=diasParaEntrega(b);
+    if(da===null&&db===null) return 0;
+    if(da===null) return 1; if(db===null) return -1;
+    return da-db;
+  });
+  if(filtroAtivo!=='todos') lista=lista.filter(function(p){return urgenciaTabela(p)===filtroAtivo});
+  if(searchTerm) lista=lista.filter(function(p){
+    return p.cliente.toLowerCase().includes(searchTerm)||p.num.includes(searchTerm)||p.objeto.toLowerCase().includes(searchTerm);
+  });
+  var tbody = document.getElementById('tbody');
+  if(!lista.length){tbody.innerHTML='<tr><td colspan="8" class="empty">Nenhum projeto encontrado.</td></tr>';return;}
+  var statusLabel = {andamento:'Em andamento',pausado:'Pausado',concluido:'Concluído'};
+  tbody.innerHTML = lista.map(function(p){
+    var urg=urgenciaTabela(p);
+    var dias=diasParaEntrega(p);
+    var diasStr=dias===null?'—':(dias<0?dias+'d':'+'+dias+'d');
+    var diasCls=urgencia(dias);
+    return '<tr class="clickable" onclick="verDetalhe('+p.id+')">'+
+      '<td style="font-weight:500;color:#888780">'+p.num+'</td>'+
+      '<td style="font-weight:500">'+p.cliente+'</td>'+
+      '<td style="color:#5f5e5a">'+p.objeto+'</td>'+
+      '<td>'+proxEntrega(p)+'</td>'+
+      '<td><span class="dias-badge '+diasCls+'">'+diasStr+'</span></td>'+
+      '<td>'+fmtValor(p.valor)+'</td>'+
+      '<td><span class="badge '+urg+'">'+(statusLabel[p.status]||'Em andamento')+'</span></td>'+
+      '<td><button class="btn" style="font-size:12px;padding:4px 10px" onclick="event.stopPropagation();editarProjeto('+p.id+')">editar</button></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function render(){renderMetrics();renderTabela();}
+
+function filtrar(f,el){
+  filtroAtivo=f;
+  document.querySelectorAll('.pill').forEach(function(p){p.classList.remove('active')});
+  el.classList.add('active');
+  renderTabela();
+}
+
+document.getElementById('searchInput').addEventListener('input',function(e){
+  searchTerm=e.target.value.toLowerCase().trim();
+  renderTabela();
+});
+
+function fecharModal(){
+  document.getElementById('modal').style.display='none';
+  document.getElementById('modal').innerHTML='';
+}
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape') fecharModal();});
+
+function verDetalhe(id){
+  var p=projetos.find(function(x){return x.id===id}); if(!p) return;
+  var urg=urgenciaTabela(p);
+  var statusLabel={andamento:'Em andamento',pausado:'Pausado',concluido:'Concluído'};
+  var marcosHtml=p.marcos.map(function(m,i){
+    var d=m.data?new Date(m.data+'T00:00:00'):null;
+    var dias=d?Math.round((d-hoje)/(1000*60*60*24)):null;
+    var diasInfo=m.concluido?'concluído':(!d?'sem data':(dias<0?'vencido há '+Math.abs(dias)+'d':'em '+dias+'d'));
+    return '<div class="marco-check-item">'+
+      '<input type="checkbox" '+(m.concluido?'checked':'')+' onchange="toggleMarco('+id+','+i+',this.checked)">'+
+      '<div><div style="font-size:13px;'+(m.concluido?'text-decoration:line-through;color:#888780':'')+'">'+(m.nome||'Marco sem nome')+'</div>'+
+      '<div style="font-size:12px;color:#888780;margin-top:2px">'+fmtData(m.data)+' — '+diasInfo+'</div></div></div>';
+  }).join('');
+  var html='<div class="modal-bg" id="modalbg">'+
+    '<div class="modal">'+
+    '<div class="modal-header">'+
+    '<div><div style="font-size:12px;color:#888780;margin-bottom:2px">'+p.num+'</div><h2>'+p.cliente+'</h2></div>'+
+    '<button class="close-btn" onclick="fecharModal()">×</button></div>'+
+    '<div class="modal-body">'+
+    '<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">'+
+    '<span class="badge '+urg+'" style="font-size:12px;padding:4px 12px">'+(statusLabel[p.status]||'Em andamento')+'</span>'+
+    '<span style="font-size:13px;font-weight:500;color:#1a1a18">'+fmtValor(p.valor)+'</span>'+
+    '</div>'+
+    '<div class="detail-label">Objeto / serviço</div><div class="detail-value">'+p.objeto+'</div>'+
+    (p.contato?'<div class="detail-label">Contato (A/C)</div><div class="detail-value">'+p.contato+'</div>':'')+
+    (p.dataInicio?'<div class="detail-label">Data de início</div><div class="detail-value">'+fmtData(p.dataInicio)+'</div>':'')+
+    '<div class="detail-label">Marcos de entrega</div>'+
+    '<div style="margin-bottom:14px">'+marcosHtml+'</div>'+
+    (p.obs?'<div class="detail-label">Observações</div><div style="font-size:13px;color:#5f5e5a;background:#f9f8f5;padding:10px;border-radius:8px;line-height:1.6">'+p.obs+'</div>':'')+
+    '</div>'+
+    '<div class="modal-footer">'+
+    '<button class="btn btn-danger" onclick="excluirProjeto('+id+')">Excluir</button>'+
+    '<span class="spacer"></span>'+
+    '<button class="btn" onclick="fecharModal()">Fechar</button>'+
+    '<button class="btn btn-primary" onclick="editarProjeto('+id+')">Editar</button>'+
+    '</div></div></div>';
+  var m=document.getElementById('modal');
+  m.innerHTML=html; m.style.display='block';
+  document.getElementById('modalbg').addEventListener('click',function(e){if(e.target===this) fecharModal();});
+}
+
+function toggleMarco(pid,idx,val){
+  var p=projetos.find(function(x){return x.id===pid}); if(!p) return;
+  p.marcos[idx].concluido=val;
+  salvarStorage(); render(); verDetalhe(pid);
+}
+
+function abrirNovo(){abrirForm(null);}
+function editarProjeto(id){fecharModal();setTimeout(function(){abrirForm(projetos.find(function(p){return p.id===id}));},80);}
+
+function abrirForm(p){
+  var novo=!p;
+  if(!p) p={id:null,num:'',cliente:'',contato:'',objeto:'',dataInicio:'',marcos:[{nome:'Entrega',data:'',concluido:false}],valor:'',status:'andamento',obs:''};
+  window._marcos=p.marcos.map(function(m){return {nome:m.nome,data:m.data,concluido:!!m.concluido}});
+
+  function marcosHtml(){
+    return window._marcos.map(function(m,i){
+      return '<div class="marco-item" id="mi'+i+'">'+
+        '<input type="text" placeholder="Descrição do marco" value="'+escHtml(m.nome)+'" oninput="window._marcos['+i+'].nome=this.value">'+
+        '<input type="date" value="'+m.data+'" onchange="window._marcos['+i+'].data=this.value">'+
+        '<button class="rm-btn" onclick="remMarco('+i+')" type="button">×</button></div>';
+    }).join('');
+  }
+
+  var html='<div class="modal-bg" id="modalbg2">'+
+    '<div class="modal">'+
+    '<div class="modal-header"><h2>'+(novo?'Novo projeto':'Editar projeto')+'</h2>'+
+    '<button class="close-btn" onclick="fecharModal()">×</button></div>'+
+    '<div class="modal-body">'+
+    '<div class="field-row">'+
+    '<div class="field"><label>Nº da proposta</label><input type="text" id="fn" value="'+escHtml(p.num)+'" placeholder="#196"></div>'+
+    '<div class="field"><label>Status</label><select id="fs">'+
+    '<option value="andamento"'+(p.status==='andamento'?' selected':'')+'>Em andamento</option>'+
+    '<option value="pausado"'+(p.status==='pausado'?' selected':'')+'>Pausado</option>'+
+    '<option value="concluido"'+(p.status==='concluido'?' selected':'')+'>Concluído</option>'+
+    '</select></div></div>'+
+    '<div class="field-row">'+
+    '<div class="field"><label>Cliente</label><input type="text" id="fc" value="'+escHtml(p.cliente)+'" placeholder="Nome do cliente"></div>'+
+    '<div class="field"><label>Contato (A/C)</label><input type="text" id="fct" value="'+escHtml(p.contato)+'"></div>'+
+    '</div>'+
+    '<div class="field" style="margin-bottom:14px"><label>Objeto / serviço</label>'+
+    '<input type="text" id="fo" value="'+escHtml(p.objeto)+'" placeholder="Descrição do serviço"></div>'+
+    '<div class="field-row">'+
+    '<div class="field"><label>Data de início</label><input type="date" id="fdi" value="'+p.dataInicio+'"></div>'+
+    '<div class="field"><label>Valor (R$)</label><input type="number" id="fv" value="'+p.valor+'" step="0.01" min="0" placeholder="0,00"></div>'+
+    '</div>'+
+    '<div class="marcos-section"><label>Marcos de entrega</label>'+
+    '<div id="mlist">'+marcosHtml()+'</div>'+
+    '<button class="add-marco" onclick="addMarco()" type="button">+ Adicionar marco</button></div>'+
+    '<div class="field"><label>Observações</label><textarea id="fob">'+escHtml(p.obs)+'</textarea></div>'+
+    '</div>'+
+    '<div class="modal-footer">'+
+    (novo?'':'<button class="btn btn-danger" onclick="excluirProjeto('+p.id+')" type="button">Excluir</button>')+
+    '<span class="spacer"></span>'+
+    '<button class="btn" onclick="fecharModal()" type="button">Cancelar</button>'+
+    '<button class="btn btn-primary" onclick="salvarForm('+( novo?'null':p.id)+')" type="button">Salvar</button>'+
+    '</div></div></div>';
+
+  var m=document.getElementById('modal');
+  m.innerHTML=html; m.style.display='block';
+  document.getElementById('modalbg2').addEventListener('click',function(e){if(e.target===this) fecharModal();});
+
+  window.addMarco=function(){
+    window._marcos.push({nome:'',data:'',concluido:false});
+    document.getElementById('mlist').innerHTML=marcosHtml();
+  };
+  window.remMarco=function(i){
+    if(window._marcos.length<=1) return;
+    window._marcos.splice(i,1);
+    document.getElementById('mlist').innerHTML=marcosHtml();
+  };
+}
+
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function salvarForm(id){
+  var num=document.getElementById('fn').value.trim();
+  var cliente=document.getElementById('fc').value.trim();
+  var contato=document.getElementById('fct').value.trim();
+  var objeto=document.getElementById('fo').value.trim();
+  var dataInicio=document.getElementById('fdi').value;
+  var valor=parseFloat(document.getElementById('fv').value)||0;
+  var status=document.getElementById('fs').value;
+  var obs=document.getElementById('fob').value.trim();
+  var marcos=window._marcos.filter(function(m){return m.nome||m.data});
+  if(!cliente){alert('Informe o nome do cliente.');return;}
+  if(!marcos.length) marcos=[{nome:'Entrega',data:'',concluido:false}];
+  if(id===null){
+    projetos.push({id:nextId++,num:num,cliente:cliente,contato:contato,objeto:objeto,dataInicio:dataInicio,marcos:marcos,valor:valor,status:status,obs:obs});
+    toast('Projeto cadastrado!');
+  } else {
+    var idx=projetos.findIndex(function(p){return p.id===id});
+    if(idx>=0) projetos[idx]={id:id,num:num,cliente:cliente,contato:contato,objeto:objeto,dataInicio:dataInicio,marcos:marcos,valor:valor,status:status,obs:obs};
+    toast('Projeto atualizado!');
+  }
+  salvarStorage(); fecharModal(); render();
+}
+
+function excluirProjeto(id){
+  if(!confirm('Tem certeza que deseja excluir este projeto?')) return;
+  projetos=projetos.filter(function(p){return p.id!==id});
+  salvarStorage(); fecharModal(); render(); toast('Projeto excluído.');
+}
+
+render();
+</script>
+</body>
+</html>
